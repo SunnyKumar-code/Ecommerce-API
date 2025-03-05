@@ -39,6 +39,11 @@ const userSchemaObject = {
         required: true,
         enum: ["MALE", "FEMALE", "OTHERS"] // List Of allowed values
 
+    },
+    "token":{
+        type:String,
+        require:false,
+        default:""
     }
 }
 const userSchema = new mongoose.Schema(userSchemaObject);
