@@ -1,10 +1,12 @@
 const productModel = require("../models/product.model");
+const UserModel=require("../models/user.model")
 const productCreate = async (req, res, next) => {
     try {
-        await productModel.create(req.body);
+        const data = await productModel.create(req.body);
         res.json({
             success : true,
-            message:"Product Created Successfully"
+            message:"Product Created Successfully",
+            ProductId:data._id
         })
     } catch (err) {
         next(err)
@@ -81,10 +83,44 @@ const productDetail = async(req,res,next)=>{
         next(err)
     }
 }
+const addReview= async(req,res,next)=>{
+    const userDetailsFromDb =await UserModel.findById(req.body.userId)
+    console.log(userDetailsFromDb);
+    /**
+     * add array in data base
+     */
+    // const items=[{},{},{}];
+    // $push:{
+    //     reviews:{
+    //         $each:items
+    //     }
+    // }
+    await productModel.findByIdAndUpdate(req.body.productId,
+        {
+        $push:{
+            reviews:{
+                rating:req.body.review.rating,
+                comment:req.body.review.comment,
+                reviewerName:`${userDetailsFromDb.firstName} ${userDetailsFromDb.lastName}`,
+                reviewerEmail:userDetailsFromDb.email
+            }
+        }
+    }
+)
+    try{
+        res.json({
+            success:true,
+            message:"Review added Successfully"
+        })
+    }catch(err){
+        next(err)
+    }
+}
 
 const productController={
     productCreate,
     productLists,
-    productDetail
+    productDetail,
+    addReview
 }
 module.exports = productController

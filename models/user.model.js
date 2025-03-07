@@ -46,7 +46,9 @@ const userSchemaObject = {
         default:""
     }
 }
-const userSchema = new mongoose.Schema(userSchemaObject);
+const userSchema = new mongoose.Schema(userSchemaObject,{
+    timestamps:true
+});
 
 userSchema.pre("save", async function () {
     const salt = await bcrypt.genSalt(10);  //extra layer of security

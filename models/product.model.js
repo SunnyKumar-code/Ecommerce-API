@@ -83,7 +83,8 @@ const productSchema = new Schema({
         },
         date: {
             type: Date,
-            required: true
+            required: true,
+            default:new Date()
         },
         reviewerName: {
             type: String,
@@ -128,9 +129,11 @@ const productSchema = new Schema({
         type: String,
         required: true
     }
+},{
+    timestamps:true
 });
 
 // Create the model from the schema
-const Product = mongoose.model('Product', productSchema);
+const Product = mongoose.model('products', productSchema);
 
 module.exports = Product;
