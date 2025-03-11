@@ -44,7 +44,13 @@ const userSchemaObject = {
         type:String,
         require:false,
         default:""
-    }
+    },
+        role:{
+            type:String,
+            default:"CUSTOMER",
+            enum:["CUSTOMER","SELLER","ADMIN","SUPER_ADMIN"]
+        }
+    
 }
 const userSchema = new mongoose.Schema(userSchemaObject,{
     timestamps:true

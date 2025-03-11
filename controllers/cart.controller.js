@@ -1,4 +1,5 @@
 const CartModel = require("../models/cart.model")
+
 const cartAdd = async (req, res, next) => {
     try {
         //await CartModel.create(req.body)
@@ -7,10 +8,12 @@ const cartAdd = async (req, res, next) => {
          *      1.1 if not create a new cart and add the product
          *      1.2 if available , push the product to existing cart
          */
+        console.log(req.user);
+        
         const userCartFromDB = await CartModel.findOne({
-            userId: req.body.userId
+            userId: req.user._id
         })
-        console.log(userCartFromDB);
+        //console.log(userCartFromDB);
         if (userCartFromDB) {
             //push the item to the existing cart
             const newProduct = {
@@ -27,7 +30,7 @@ const cartAdd = async (req, res, next) => {
             //create new cart
             const objectToInsert = {
                 products: [req.body.product],
-                userId: req.body.userId
+                userId: req.user._id
             }
             await CartModel.create(objectToInsert)
         }
@@ -45,7 +48,7 @@ const changerQty = async (req, res, next) => {
     try {
         const response = await CartModel.updateOne(
             {
-                userId: req.body.userId,
+                userId: req.user._id,
                 "products.productId": req.body.product.productId
             },
             {
@@ -79,7 +82,7 @@ const cartGet = async(req,res,next)=>{
     try{
         const cart = await CartModel
         .findOne({
-            userId:req.body.userId
+            userId:req.user._id
         })
         .populate("products.productId")
         res.json({

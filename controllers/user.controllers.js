@@ -5,7 +5,7 @@ const dotenv=require("dotenv")
 const jwt = require("jsonwebtoken")
 dotenv.config();
 
-const JWR_SECRET_KEY = process.env.JWR_SECRET_KEY
+const JWR_SECRET_KEY = process.env.JWT_SECRET_KEY
 
 const register = async (req, res, next) => {
     try {
@@ -25,6 +25,9 @@ const login = async (req, res, next) => {
     try {
         /**
          * Login Successful => email & password combination should match 
+         * 2. not valid before
+         * 3. not expired
+         * 4.
          */
         const user = await UserModel.findOne({ email: req.body.email })
         if (!user) {
@@ -40,14 +43,18 @@ const login = async (req, res, next) => {
             const currentTimeInSec = parseInt(Date.now()/1000);
             const tokenData ={
                 iat:currentTimeInSec,
-                exp:currentTimeInSec+3600,
+            
                 _id:user._id
             }
-            const token =  jwt.sign(tokenData,JWR_SECRET_KEY)
+            const token =  jwt.sign(tokenData,JWR_SECRET_KEY,{
+                expiresIn:3600,
+                notBefore:0
+            })
 
             // DB update for this token /Store this token in DB
 
             await UserModel.findByIdAndUpdate(user._id,{token:token})
+            res.cookie("token",token)
             res.json({
                 success: true,
                 message: "Login successfully",
