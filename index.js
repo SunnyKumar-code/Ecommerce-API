@@ -9,6 +9,7 @@ const productRoutes = require("./routes/product.route")
 const cartRouter = require("./routes/cart.route")
 const couponRouter = require("./routes/coupon.route")
 const orderRouter = require("./routes/order.route")
+const wishlistRouter = require("./routes/wishlist.route")
 
 const authMiddleware = require("./middlewares/authMiddleware")
 
@@ -38,6 +39,7 @@ app.use(limiter)
 app.use("/api/v1/user",userRoutes)
 app.use("/api/v1/product",authMiddleware, productRoutes)
 app.use("/api/v1/cart",authMiddleware,cartRouter)
+app.use("/api/v1/wishlist",authMiddleware,wishlistRouter)
 app.use("/coupon",authMiddleware,couponRouter)
 app.use("/api/v1/order",authMiddleware,orderRouter)
 
