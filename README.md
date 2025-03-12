@@ -8,67 +8,66 @@ https://ecommerce-api-aco4.onrender.com
 ## Authentication
 
 ### Register User
-**Endpoint:** `POST /register`
+**Endpoint:** `POST /api/v1/user/register`
 
 ### Login User
-**Endpoint:** `POST /login`
+**Endpoint:** `POST /api/v1/user/login`
 
 ---
 
 ## Wishlist Routes
 
 ### Add to Wishlist
-**Endpoint:** `POST /add`
+**Endpoint:** `POST /api/v1/wishlist/add`
 
 ### Remove from Wishlist
-**Endpoint:** `DELETE /delete`
+**Endpoint:** `DELETE /api/v1/wishlist/delete`
 
 ### Get Wishlist
-**Endpoint:** `GET /list`
+**Endpoint:** `GET /api/v1/wishlist/list`
 
 ---
 
 ## Product Routes
 
 ### Create Product (Only SELLER & ADMIN)
-**Endpoint:** `POST /create`
+**Endpoint:** `POST /api/v1/product/create`
 
 ### Get Product List
-**Endpoint:** `GET /list`
+**Endpoint:** `GET /api/v1/product/list`
 
 ### Get Product Details
-**Endpoint:** `GET /:id`
+**Endpoint:** `GET /api/v1/product/:id`
 
 ### Add Review (Only CUSTOMER)
-**Endpoint:** `POST /add-review`
+**Endpoint:** `POST /api/v1/product/add-review`
 
 ---
 
 ## Order Routes
 
 ### Create Order
-**Endpoint:** `POST /create`
+**Endpoint:** `POST /api/v1/order/create`
 
 ---
 
 ## Coupon Routes
 
 ### Create Coupon
-**Endpoint:** `POST /create`
+**Endpoint:** `POST /coupon/create`
 
 ### Get Coupon
-**Endpoint:** `GET /get`
+**Endpoint:** `GET /coupon/get`
 
 ---
 
 ## Cart Routes
 
 ### Add to Cart
-**Endpoint:** `POST /add`
+**Endpoint:** `POST /api/v1/cart/add`
 
 ### Change Quantity
-**Endpoint:** `POST /change-qty`
+**Endpoint:** `POST /api/v1/cart/change-qty`
 
 ### Get Cart
-**Endpoint:** `GET /`
-
+**Endpoint:** `GET /api/v1/cart/`
