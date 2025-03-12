@@ -115,8 +115,7 @@ const orderCreate = async (req, res, next) => {
 
             // payment gateway 
 
-            console.log("Key ID:", process.env.RAZORPAY_KEY_ID);
-            console.log("Key Secret:", process.env.RAZORPAY_KEY_SECRET);
+       
 
             const razorpay = new Razorpay({
                 key_id: process.env.RAZORPAY_KEY_ID,
@@ -127,7 +126,7 @@ const orderCreate = async (req, res, next) => {
                 const razorpayOrder = await razorpay.orders.create({
                     amount: Math.round(amountToBePaid * 100), // amount in paisa
                     currency: "INR",
-                    receipt: `ODR_${req.user._id}_${Date.now()}`, // unique receipt id => order._id
+                    receipt: `ODR_${Date.now()}`, // unique receipt id => order._id
                 });
 
                 console.log(`Razorpay Order Response: ${JSON.stringify(razorpayOrder, null, 2)}`);
