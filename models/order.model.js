@@ -68,6 +68,12 @@ amountToBePaid:{
     type:Number,
     required:true
 },
+status:{
+    type:String,
+    require:true,
+    default:"PENDING",
+    enum:["PENDING","CONFIRMED"]
+},
 orderStatus:{
     type:String,
     require:true,
@@ -75,7 +81,7 @@ orderStatus:{
     enum:["IN_PROCESS","SHIPPED","OUT_FOR_DELIVERY","DELIVERED","RETURNED","REPLACED"]
 }
 },{
-    timeseries:true
+    timestamps: true
 })
 
 const OrderModel = mongoose.model("orders",orderSchema)

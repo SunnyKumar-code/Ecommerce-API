@@ -1,9 +1,11 @@
 const CartModel = require("../models/cart.model")
 const CouponModel = require("../models/coupon.model")
-const OrderModel =require("../models/order.model")
+const OrderModel = require("../models/order.model")
 const ProductModel = require("../models/product.model")
 const emailSender = require("../service/emailService")
-
+const Razorpay = require("razorpay")
+const dotenv = require("dotenv")
+dotenv.config();
 const dayjs = require("dayjs")
 
 const orderCreate = async (req, res, next) => {
@@ -46,13 +48,13 @@ const orderCreate = async (req, res, next) => {
         //     const cost = currentProduct.productId.price * currentProduct.qty;
         //     total = total+cost
         //    }
-        console.log(total);
-         let discountInRs
-         let amountToBePaid = total;
+        //console.log(total);
+        let discountInRs = 0
+        let amountToBePaid = total;
         if (req.body.couponCode) {
             const couponDetails = await CouponModel.findOne({ code: req.body.couponCode })
-            console.log(couponDetails);
-            
+            //console.log(couponDetails);
+
             if (!couponDetails) {
                 return res
                     .status(400)
@@ -61,75 +63,117 @@ const orderCreate = async (req, res, next) => {
                         message: "Your coupon is Invalid"
                     })
 
-                }
-                const couponExpiryDate = dayjs(couponDetails.validTill)
-                const currentDate = dayjs()
-                const isValid = currentDate.isBefore(couponExpiryDate)
-               if(!isValid){
+            }
+            const couponExpiryDate = dayjs(couponDetails.validTill)
+            const currentDate = dayjs()
+            const isValid = currentDate.isBefore(couponExpiryDate)
+            if (!isValid) {
                 return res
                     .status(400)
                     .json({
                         success: false,
                         message: "Your coupon is Expire"
                     })
-               }
+            }
 
-               if(total<couponDetails.minAmountRequired){
+            if (total < couponDetails.minAmountRequired) {
                 return res
-                .status(400)
-                .json({
-                    success: false,
-                    message: `Minimum amount required to claim this coupon is Rs ${couponDetails.minAmountRequired}`
-                })
-               }
-               discountInRs = (total/100)*couponDetails.discountPercentage;
-               discountInRs=discountInRs > couponDetails.maxDiscountInRs?couponDetails.maxDiscountInRs:discountInRs
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: `Minimum amount required to claim this coupon is Rs ${couponDetails.minAmountRequired}`
+                    })
+            }
+            discountInRs = (total * couponDetails.discountPercentage) / 100;
+            discountInRs = Math.min(discountInRs, couponDetails.maxDiscountInRs);
 
-                amountToBePaid =( total - discountInRs).toFixed(2)
+            amountToBePaid = (total - discountInRs).toFixed(2)
 
         }
 
-        if(req.body.couponCode === "ONLINE"){
-           // payment gateway 
-        }
-          
-        const ProductsOrdered = userCart.products.map(product=>({productId:product.productId._id,qty:product.qty}))
-        console.log(ProductsOrdered);
-        
-         
+
+
+        const ProductsOrdered = userCart.products.map(product => ({
+            productId: product.productId._id,
+            qty: product.qty
+        }));
+
+
+
         const orderDetails = {
-            paymentMode :req.body.paymentMode,
-            shippingAddress:req.body.shippingAddress,
-            user:req.user._id,
-            totalAmount:total,
-            discountAmount:discountInRs,
-            amountToBePaid:amountToBePaid,
-            productDetails:ProductsOrdered
+            paymentMode: req.body.paymentMode,
+            shippingAddress: req.body.shippingAddress,
+            user: req.user._id,
+            totalAmount: total,
+            discountAmount: discountInRs,
+            amountToBePaid: amountToBePaid,
+            productDetails: ProductsOrdered,
+            status: req.body.paymentMode === "ONLINE" ? "PENDING" : "CONFIRMED" // Mark online orders as pending
         }
-         
-        await OrderModel.create(orderDetails)
-       await CartModel.deleteOne({userId:req.user._id})
+        let createdOrder;
+        if (req.body.paymentMode === "ONLINE") {
 
-       ProductsOrdered.forEach( async(product) =>{
+            // payment gateway 
 
-         const insertedOrderDetails= await  ProductModel.findByIdAndUpdate(product.productId,{
-               $inc:{
-                   stock:-product.qty
-               }
-           })
-       })
+            console.log("Key ID:", process.env.RAZORPAY_KEY_ID);
+            console.log("Key Secret:", process.env.RAZORPAY_KEY_SECRET);
 
-       emailSender({
-        toEmail:req.user.email,
-        subject:"Order Confirmation!",
-        orderDetails:{
+            const razorpay = new Razorpay({
+                key_id: process.env.RAZORPAY_KEY_ID,
+                key_secret: process.env.RAZORPAY_KEY_SECRET
+            });
 
+            try {
+                const razorpayOrder = await razorpay.orders.create({
+                    amount: Math.round(amountToBePaid * 100), // amount in paisa
+                    currency: "INR",
+                    receipt: `ODR_${req.user._id}_${Date.now()}`, // unique receipt id => order._id
+                });
+
+                console.log(`Razorpay Order Response: ${JSON.stringify(razorpayOrder, null, 2)}`);
+
+                orderDetails.razorpayOrderId = razorpayOrder.id;
+                createdOrder = await OrderModel.create(orderDetails);
+
+                return res.json({
+                    success: true,
+                    orderId: razorpayOrder.id,
+                    orderDetails: createdOrder
+                });
+            } catch (error) {
+                console.error("Error creating Razorpay order:", error);
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to create Razorpay order. Please try again later."
+                });
+            }
         }
-       })
-        res.json({
-            success: true,
-            message: `Order places Successfully, Order id : ${insertedOrderDetails._id} `
+        // Process COD orders
+        createdOrder = await OrderModel.create(orderDetails);
+        // Clear user cart
+        await CartModel.deleteOne({ userId: req.user._id })
+
+        // Reduce stock inventory
+        ProductsOrdered.forEach(async (product) => {
+
+            const insertedOrderDetails = await ProductModel.findByIdAndUpdate(product.productId, {
+                $inc: {
+                    stock: -product.qty
+                }
+            })
         })
+
+        // Send order confirmation email
+        //    emailSender({
+        //        toEmail: req.user.email,
+        //        subject: "Order Confirmation!",
+        //        orderDetails: createdOrder
+        //    });
+        return res.json({
+            success: true,
+            message: "Order placed successfully",
+            orderDetails: createdOrder
+        });
     } catch (err) {
         next(err)
     }

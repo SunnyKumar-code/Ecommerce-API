@@ -6,16 +6,6 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Api testing </h1>
-    <script>
-        fetch("http://localhost:5000/api/v1/product/list",{
-            headers:{
-                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NDE1NDAwNDYsIl9pZCI6IjY3Y2E2N2Y2NzU3ZGYwMTIyYjRlZTAyZCIsIm5iZiI6MTc0MTU0MDA0NiwiZXhwIjoxNzQxNTQzNjQ2fQ.M01SbTiZ2PYV4qIXY9QYymyY__-M1oh8WzR8b9y8PKQ",
-            }
-        })
-        .then(res=> res.json())
-        .then(data=>console.log(data))
-        .catch(err=>console.log("ERROR OCCURRED IN API CALL",err))
-    </script>
+    
 </body>
 </html>
